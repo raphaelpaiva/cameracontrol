@@ -30,7 +30,7 @@ function RunADBCommand {
   Start-Process -FilePath "adb.exe" -ArgumentList "-s $Device $command" -RedirectStandardOutput "adb-$Device-out.txt" -RedirectStandardError "adb-$Device-err.txt" -Wait
 }
 
-function Record {
+function FullRecord {
   foreach ($device in $devices)
   {
     RunADBCommand -Device $device.id -Command $ADBShell_HomeCommand
@@ -38,7 +38,7 @@ function Record {
     RunADBCommand -Device $device.id -Command $ADBShell_RecordCommand
   }
 }
-function Stop {
+function FullStop {
   foreach ($device in $devices)
   {
     RunADBCommand -Device $device.id -Command $ADBShell_RecordCommand
@@ -46,12 +46,29 @@ function Stop {
   }
 }
 
+Function SimpleRecord {
+  foreach ($device in $devices)
+  {
+    RunADBCommand -Device $device.id -Command $ADBShell_RecordCommand
+  }
+}
+
+Function SimpleStop {
+  foreach ($device in $devices)
+  {
+    RunADBCommand -Device $device.id -Command $ADBShell_RecordCommand
+  }
+}
+
+
 $COMMAND = $args[0]
 
 $COMMANDS = @{
-  Record = (Get-Item function:Record)
+  Record = (Get-Item function:SimpleRecord)
+  Stop = (Get-Item function:SimpleStop)
+  FullRecord = (Get-Item function:FullRecord)
+  FullStop = (Get-Item function:FullStop)
   Monitor = (Get-Item function:Monitor)
-  Stop = (Get-Item function:Stop)
 }
 
 Write-Output "Running $COMMAND"

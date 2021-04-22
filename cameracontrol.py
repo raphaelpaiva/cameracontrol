@@ -48,7 +48,7 @@ class App(object):
     except (RuntimeError, ConnectionRefusedError):
       if try_adb:
         self._run_adb()
-        return self.connect(try_adb=False)
+        return self._connect(try_adb=False)
       else:
         print("Failed. ADB is not running.")
         return None

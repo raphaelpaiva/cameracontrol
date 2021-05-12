@@ -13,7 +13,7 @@ ADBShell_GetLastFileCommand = f"ls -rt {DEFAULT_VIDEO_DIR} | tail -n 1"
 
 RC_ADB_NOT_RUNNING = 1
 
-COMMAND_CHOICES = ['record', 'monitor', 'save_last_file']
+COMMAND_CHOICES = ['record', 'monitor', 'save_last_file', 'delete_last_file']
 
 def main():
   parser = argparse.ArgumentParser(description="I can monitor using scrcpy and send commands to your phone :)")
@@ -44,7 +44,7 @@ class App(object):
     if self.client is None:
       self._fail("Could not run ADB. Is it on $PATH?", RC_ADB_NOT_RUNNING)
 
-    self.public_commands = [self.simple_record, self.monitor, self.save_last_file]
+    self.public_commands = [self.simple_record, self.monitor, self.save_last_file, self.delete_last_file]
 
   def _connect(self, try_adb: bool = True) -> AdbClient:
     try:
@@ -84,6 +84,14 @@ class App(object):
       num += 1
 
   # Commands
+
+  def delete_last_file(self, device: Device = None):
+    last_file_result = device.shell(ADBShell_GetLastFileCommand)
+    last_file_result.strip()
+    last_file_full_path = f"{DEFAULT_VIDEO_DIR}/{last_file_result}".strip()
+    device.shell(f"mv {last_file_full_path} {last_file_full_path}_DISCARDED")
+
+    print(last_file_full_path)
 
   def save_last_file(self, device: Device = None):
     device.shell(ADBShell_CreateSaveDirCommand)

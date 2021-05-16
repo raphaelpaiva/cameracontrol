@@ -1,14 +1,17 @@
+from collections import UserString
 import subprocess
 import argparse
+from typing import Callable
 from ppadb.client import Client as AdbClient
 from ppadb.device import Device
 
 DEFAULT_VIDEO_DIR = "/sdcard/DCIM/Camera"
-DEFAULT_SAVE_DIR  = f"{DEFAULT_VIDEO_DIR}/take"
+DEFAULT_VIDEO_FILE_PREFFIX = "VID"
+DEFAULT_SAVE_DIR  = f"{DEFAULT_VIDEO_DIR}"
 
 ADBShell_RecordCommand = "input keyevent KEYCODE_VOLUME_UP"
 
-ADBShell_CreateSaveDirCommand = f"mkdir -p {DEFAULT_SAVE_DIR}"
+ADBShell_CreateSaveDirCommand = "mkdir -p"
 ADBShell_GetLastFileCommand = f"ls -rt {DEFAULT_VIDEO_DIR} | tail -n 1"
 
 RC_ADB_NOT_RUNNING = 1
@@ -19,10 +22,12 @@ def main():
   parser = argparse.ArgumentParser(description="I can monitor using scrcpy and send commands to your phone :)")
   parser.add_argument('command', nargs='?', choices=COMMAND_CHOICES, help='what should i do?')
   parser.add_argument('-q', '--quiet', action='store_true', help='should i print my stuff?')
+  parser.add_argument('--dry-run', action='store_true', help='should i actually do stuff?')
+  parser.add_argument('--project-name', default='take', help='What are you working on?')
 
   args = parser.parse_args()
 
-  app = App()
+  app = App(args)
 
   commands = dict(zip(COMMAND_CHOICES, app.public_commands))
 
@@ -34,11 +39,12 @@ def main():
   if args.command in commands:
     app.call_command(func=commands[args.command], target=None)
   else:
-    app.monitor()
-    app.simple_record()
+    app.call_command(app.monitor)
+    app.call_command(app.simple_record)
 
 class App(object):
-  def __init__(self):
+  def __init__(self, args):
+    self.args = args
     self.client = self._connect()
 
     if self.client is None:
@@ -70,7 +76,7 @@ class App(object):
 
   # Internal Methods
 
-  def call_command(self, func, target):
+  def call_command(self, func : Callable, target : Device = None):
     if target is not None:
       func(target)
     else:
@@ -83,29 +89,42 @@ class App(object):
       print(f"{num}: {device.get_serial_no()}\t{device.get_properties()['ro.product.model']}")
       num += 1
 
+  def get_save_dir(self):
+    return f"{DEFAULT_SAVE_DIR}/{self.args.project_name}"
+
+
+  # Intended to be used by final commands with side effects
+  def _run_shell(self, device : Device, shellcmd : str):
+    if self.args.dry_run:
+      print(shellcmd)
+    else:
+      return device.shell(shellcmd)
+
   # Commands
 
-  def delete_last_file(self, device: Device = None):
+  def delete_last_file(self, device: Device):
     last_file_result = device.shell(ADBShell_GetLastFileCommand)
     last_file_result.strip()
+
     last_file_full_path = f"{DEFAULT_VIDEO_DIR}/{last_file_result}".strip()
-    device.shell(f"mv {last_file_full_path} {last_file_full_path}_DISCARDED")
+    self._run_shell(device, f"mv {last_file_full_path} {last_file_full_path}_DISCARDED")
 
     print(last_file_full_path)
 
-  def save_last_file(self, device: Device = None):
-    device.shell(ADBShell_CreateSaveDirCommand)
+  def save_last_file(self, device: Device):
+    self._run_shell(device, f"{ADBShell_CreateSaveDirCommand} {self.get_save_dir()}")
     last_file_result = device.shell(ADBShell_GetLastFileCommand)
     last_file_result.strip()
     last_file_full_path = f"{DEFAULT_VIDEO_DIR}/{last_file_result}".strip()
-    device.shell(f"cp {last_file_full_path} {DEFAULT_SAVE_DIR}")
+    
+    self._run_shell(device, f"cp {last_file_full_path} {self.get_save_dir()}")
 
     print(last_file_full_path)
 
-  def simple_record(self, device: Device = None):
-    device.shell(ADBShell_RecordCommand)
+  def simple_record(self, device: Device):
+    self._run_shell(device, ADBShell_RecordCommand)
 
-  def monitor(self, device: Device = None):
+  def monitor(self, device: Device):
     serial = device.get_serial_no()
     output_filename = f"scrcpy-{serial}.out"
     subprocess.Popen(f"scrcpy --serial {serial} -b 2M -m800 --stay-awake > {output_filename} 2>&1", shell = True)

@@ -112,11 +112,11 @@ class App(object):
     print(last_file_full_path)
 
   def save_last_file(self, device: Device):
-    self._run_shell(device, f"{ADBShell_CreateSaveDirCommand} {self.get_save_dir()}")
     last_file_result = device.shell(ADBShell_GetLastFileCommand)
     last_file_result.strip()
     last_file_full_path = f"{DEFAULT_VIDEO_DIR}/{last_file_result}".strip()
     
+    self._run_shell(device, f"{ADBShell_CreateSaveDirCommand} {self.get_save_dir()}")
     self._run_shell(device, f"cp {last_file_full_path} {self.get_save_dir()}")
 
     print(last_file_full_path)

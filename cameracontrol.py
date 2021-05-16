@@ -19,11 +19,11 @@ RC_ADB_NOT_RUNNING = 1
 COMMAND_CHOICES = ['record', 'monitor', 'save_last_file', 'delete_last_file']
 
 def main():
-  parser = argparse.ArgumentParser(description="I can monitor using scrcpy and send commands to your phone :)")
-  parser.add_argument('command', nargs='?', choices=COMMAND_CHOICES, help='what should i do?')
-  parser.add_argument('-q', '--quiet', action='store_true', help='should i print my stuff?')
-  parser.add_argument('--dry-run', action='store_true', help='should i actually do stuff?')
-  parser.add_argument('--project-name', default='take', help='What are you working on?')
+  parser = argparse.ArgumentParser(description="I can help you recording and selecting takes using your android phone.")
+  parser.add_argument('command', nargs='?', choices=COMMAND_CHOICES, help='What should i do?')
+  parser.add_argument('-q', '--quiet', action='store_true', help='Should i tell you what am I doing?')
+  parser.add_argument('--dry-run', action='store_true', help='Should i actually do stuff or just print what I would do?')
+  parser.add_argument('--project-name', default='take', help="I'll use this to name a folder so you can quickly find your good takes :)")
 
   args = parser.parse_args()
 

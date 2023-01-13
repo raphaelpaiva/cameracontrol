@@ -3,3 +3,6 @@
 *.spec
 build/
 dist/
+*.lua
+*.ini
+.DS_Store

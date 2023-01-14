@@ -140,7 +140,7 @@ local project_name = projfn
 if projfn == '' then
  project_name = 'unsaved'
 end
-os.execute('{program_path} record -q ' ..project_name)
+os.execute('{program_path} record -q --project-name ' ..project_name)
 """.strip()
     script_path.write_text(script)
     

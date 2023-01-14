@@ -6,4 +6,5 @@ dist/
 *.lua
 *.ini
 *.zip
+*.ReaperKeyMap
 .DS_Store

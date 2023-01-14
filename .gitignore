@@ -5,4 +5,5 @@ build/
 dist/
 *.lua
 *.ini
+*.zip
 .DS_Store
